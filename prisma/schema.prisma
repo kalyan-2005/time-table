@@ -1,0 +1,106 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model dept {
+  id       Int        @id @default(autoincrement())
+  name     String
+  teachers teachers[]
+  classes  classes[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model teachers {
+  id   Int    @id @default(autoincrement())
+  name String
+  sub  sub[]
+
+  dept   dept?    @relation(fields: [deptId], references: [id])
+  deptId Int?     @unique
+  period period[]
+}
+
+model sub {
+  id   Int    @id @default(autoincrement())
+  name String
+
+  teachers   teachers? @relation(fields: [teachersId], references: [id])
+  teachersId Int?
+  sem        sem?      @relation(fields: [semId], references: [id])
+  semId      Int?
+  period     period[]
+}
+
+model classes {
+  id       Int        @id @default(autoincrement())
+  year     Int
+  sec      String
+  students students[]
+
+  semis sem @relation(fields: [semId], references: [id])
+
+  dept   dept? @relation(fields: [deptId], references: [id])
+  deptId Int?
+  semId  Int
+}
+
+model sem {
+  id          Int       @id @default(autoincrement())
+  semis       String
+  sub         sub[]
+  classes     classes[]
+  timetable   timeTable? @relation(fields: [timeTableId], references: [id])
+  timeTableId Int
+}
+
+model students {
+  id   Int    @id @default(autoincrement())
+  roll String
+  name String
+
+  classes   classes? @relation(fields: [classesId], references: [id])
+  classesId Int?
+}
+
+enum Day {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+}
+
+model timeTable {
+  id     Int      @id @default(autoincrement())
+  day    Day
+  period period[]
+  sem    sem[]
+}
+
+model period {
+  id        Int      @id @default(autoincrement())
+  startTime DateTime
+  endTime   DateTime
+
+  teacher    teachers @relation(fields: [teachersId], references: [id])
+  teachersId Int
+
+  sub         sub        @relation(fields: [subId], references: [id])
+  subId       Int
+  timeTable   timeTable? @relation(fields: [timeTableId], references: [id])
+  timeTableId Int?
+}
